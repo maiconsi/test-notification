@@ -1,0 +1,155 @@
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <title>Integrar DLL em outros sistemas</title>
+  <style type="text/css"></style>
+</head>
+
+<body>
+  <h1 id="integração-da-dll-de-notificação-em-outros-sistemas">Integração da DLL de notificação em outros sistemas</h1>
+  <h3 id="o-desenvolvedor-deve-utilizar-a-dll-notificationsdll-que-realiza-os-processos-de-envio-das-notificações">O
+    desenvolvedor deve utilizar a DLL &quot;notifications.dll&quot; que realiza os processos de envio das notificações
+  </h3>
+  <h3 id="passos-para-utilização-da-dll-em-outros-projetos-delphi">Passos para utilização da DLL em outros projetos
+    Delphi</h3>
+  <ul>
+    <li>Criar um mapamento dos métodos contidos na DLL que será utilizada:</li>
+  </ul>
+  <pre><code class="language-Pascal">type
+  TInitialize = function(): Boolean;
+  TTerminate = function(): Boolean;
+  TGetUser = function(AIDUser: Integer; out ALogin: String; out AName: String; out AEmail: String; out ACellphone: String): Boolean;
+  TSaveUser = function(AIDUser: Integer; ALogin: String; AName: String; AEmail: String; ACellphone: String): Boolean;
+  TGetListOfChannels = function(): TArray&lt;String&gt;;
+  TGetListOfFrequency = function(): TArray&lt;String&gt;;
+  TGetUserNotificationBackup = function(AIDUser: Integer; out AActive: Boolean; out AFrequency: String; out AChannels: TArray&lt;String&gt;): Boolean;
+  TSaveUserNotificationBackup = function(AIDUser: Integer; AActive: Boolean; AFrequency: String; AChannels: TArray&lt;String&gt;): Boolean;
+  TGetUserNotificationTaskDue = function(AIDUser: Integer; out AActive: Boolean; out AFrequency: String; out AChannels: TArray&lt;String&gt;): Boolean;
+  TSaveUserNotificationTaskDue = function(AIDUser: Integer; AActive: Boolean; AFrequency: String; AChannels: TArray&lt;String&gt;): Boolean;
+  TSendNotificationBackupNow = function(): Boolean;
+  TSendNotificationTaskDueNow = function(): Boolean;
+  TSetNotificationBackupExecutedAt = function(AExecutedAt: TDateTime): Boolean;
+  TSetNotificationTaskDueAt = function(ATaskDueAt: TDateTime): Boolean;
+
+  TModelNotificationDLLMapping = class(TInterfacedObject, IModelNotificationDLLMapping)
+  private
+    FHandle: THandle;
+    FInitialize: TInitialize;
+    FTerminate: TTerminate;
+    FGetUser: TGetUser;
+    FSaveUser: TSaveUser;
+    FGetListOfChannels: TGetListOfChannels;
+    FGetListOfFrequency: TGetListOfFrequency;
+    FGetUserNotificationBackup: TGetUserNotificationBackup;
+    FSaveUserNotificationBackup: TSaveUserNotificationBackup;
+    FGetUserNotificationTaskDue: TGetUserNotificationTaskDue;
+    FSaveUserNotificationTaskDue: TSaveUserNotificationTaskDue;
+    FSendNotificationBackupNow: TSendNotificationBackupNow;
+    FSendNotificationTaskDueNow: TSendNotificationTaskDueNow;
+    FSetNotificationBackupExecutedAt: TSetNotificationBackupExecutedAt;
+    FSetNotificationTaskDueAt: TSetNotificationTaskDueAt;
+    procedure RegisterMethods;
+  public
+    constructor Create();
+    destructor Destroy; override;
+    class function New(): IModelNotificationDLLMapping;
+
+    function Initialize: Boolean;
+    function Terminate: Boolean;
+    function GetUser(AIDUser: Integer; out ALogin: String; out AName: String; out AEmail: String; out ACellphone: String): Boolean;
+    function SaveUser(AIDUser: Integer; ALogin: String; AName: String; AEmail: String; ACellphone: String): Boolean;
+    function GetListOfChannels: TArray&lt;String&gt;;
+    function GetListOfFrequency: TArray&lt;String&gt;;
+    function GetUserNotificationBackup(AIDUser: Integer; out AActive: Boolean; out AFrequency: String; out AChannels: TArray&lt;String&gt;): Boolean;
+    function SaveUserNotificationBackup(AIDUser: Integer; AActive: Boolean; AFrequency: String; AChannels: TArray&lt;String&gt;): Boolean;
+    function GetUserNotificationTaskDue(AIDUser: Integer; out AActive: Boolean; out AFrequency: String; out AChannels: TArray&lt;String&gt;): Boolean;
+    function SaveUserNotificationTaskDue(AIDUser: Integer; AActive: Boolean; AFrequency: String; AChannels: TArray&lt;String&gt;): Boolean;
+    function SendNotificationBackupNow(): Boolean;
+    function SendNotificationTaskDueNow(): Boolean;
+    function SetNotificationBackupExecutedAt(AExecutedAt: TDateTime): Boolean;
+    function SetNotificationTaskDueAt(ATaskDueAt: TDateTime): Boolean;
+  end;
+</code></pre>
+  <ul>
+    <li>Carregar a DLL e registra-los nos métodos da classe</li>
+  </ul>
+  <pre><code class="language-Pascal">constructor TModelNotificationDLLMapping.Create();
+begin
+  FHandle := LoadLibrary(&#39;notifications.dll&#39;);
+
+  if FHandle &lt;&gt; 0 then
+    RegisterMethods
+  else
+    raise EModelException.Create(&#39;Unable to load DLL[notification.dll]&#39;);
+end;
+
+procedure TModelNotificationDLLMapping.RegisterMethods;
+begin
+  @FInitialize  :=  GetProcAddress(FHandle, &#39;Initialize&#39;);
+  if @FInitialize = nil then
+    raise EModelException.Create(&#39;Error on get proc address(Initialize) of DLL[notification.dll]&#39;);
+
+  @FTerminate :=  GetProcAddress(FHandle, &#39;Terminate&#39;);
+  if @FTerminate = nil then
+    raise EModelException.Create(&#39;Error on get proc address(Terminate) of DLL[notification.dll]&#39;);
+
+  @FGetListOfChannels :=  GetProcAddress(FHandle, &#39;GetListOfChannels&#39;);
+  if @FGetListOfChannels = nil then
+    raise EModelException.Create(&#39;Error on get proc address(GetListOfChannels) of DLL[notification.dll]&#39;);
+
+  @FGetListOfFrequency :=  GetProcAddress(FHandle, &#39;GetListOfFrequency&#39;);
+  if @FGetListOfFrequency = nil then
+    raise EModelException.Create(&#39;Error on get proc address(GetListOfChannels) of DLL[notification.dll]&#39;);
+
+  @FGetUser :=  GetProcAddress(FHandle, &#39;GetUser&#39;);
+  if @FGetUser = nil then
+    raise EModelException.Create(&#39;Error on get proc address(GetUser) of DLL[notification.dll]&#39;);
+
+  @FSaveUser :=  GetProcAddress(FHandle, &#39;SaveUser&#39;);
+  if @FSaveUser = nil then
+    raise EModelException.Create(&#39;Error on get proc address(SaveUser) of DLL[notification.dll]&#39;);
+
+  @FGetUserNotificationBackup :=  GetProcAddress(FHandle, &#39;GetUserNotificationBackup&#39;);
+  if @FGetUserNotificationBackup = nil then
+    raise EModelException.Create(&#39;Error on get proc address(GetUserNotificationBackup) of DLL[notification.dll]&#39;);
+
+  @FSaveUserNotificationBackup :=  GetProcAddress(FHandle, &#39;SaveUserNotificationBackup&#39;);
+  if @FSaveUserNotificationBackup = nil then
+    raise EModelException.Create(&#39;Error on get proc address(SaveUserNotificationBackup) of DLL[notification.dll]&#39;);
+
+  @FGetUserNotificationTaskDue :=  GetProcAddress(FHandle, &#39;GetUserNotificationTaskDue&#39;);
+  if @FGetUserNotificationTaskDue = nil then
+    raise EModelException.Create(&#39;Error on get proc address(GetUserNotificationTaskDue) of DLL[notification.dll]&#39;);
+
+  @FSaveUser :=  GetProcAddress(FHandle, &#39;SaveUser&#39;);
+  if @FSaveUser = nil then
+    raise EModelException.Create(&#39;Error on get proc address(SaveUser) of DLL[notification.dll]&#39;);
+
+  @FSaveUserNotificationTaskDue :=  GetProcAddress(FHandle, &#39;SaveUserNotificationTaskDue&#39;);
+  if @FSaveUserNotificationTaskDue = nil then
+    raise EModelException.Create(&#39;Error on get proc address(SaveUserNotificationTaskDue) of DLL[notification.dll]&#39;);
+
+  @FSendNotificationBackupNow :=  GetProcAddress(FHandle, &#39;SendNotificationBackupNow&#39;);
+  if @FSendNotificationBackupNow = nil then
+    raise EModelException.Create(&#39;Error on get proc address(SendNotificationBackupNow) of DLL[notification.dll]&#39;);
+
+  @FSendNotificationTaskDueNow :=  GetProcAddress(FHandle, &#39;SendNotificationTaskDueNow&#39;);
+  if @FSendNotificationTaskDueNow = nil then
+    raise EModelException.Create(&#39;Error on get proc address(SendNotificationTaskDueNow) of DLL[notification.dll]&#39;);
+
+  @FSetNotificationBackupExecutedAt :=  GetProcAddress(FHandle, &#39;SetNotificationBackupExecutedAt&#39;);
+  if @FSetNotificationBackupExecutedAt = nil then
+    raise EModelException.Create(&#39;Error on get proc address(SetNotificationBackupExecutedAt) of DLL[notification.dll]&#39;);
+
+  @FSetNotificationTaskDueAt :=  GetProcAddress(FHandle, &#39;SetNotificationTaskDueAt&#39;);
+  if @FSetNotificationTaskDueAt = nil then
+    raise EModelException.Create(&#39;Error on get proc address(SetNotificationTaskDueAt) of DLL[notification.dll]&#39;);
+end;
+</code></pre>
+
+
+</body>
+
+</html>

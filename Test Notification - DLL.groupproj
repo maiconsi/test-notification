@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{68BCF8B6-D1D9-4A8B-B24E-E8A99DEED107}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="src\Library\notifications.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="test\notification_dll_test.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="src\Sample\Sample.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="notifications">
+        <MSBuild Projects="src\Library\notifications.dproj"/>
+    </Target>
+    <Target Name="notifications:Clean">
+        <MSBuild Projects="src\Library\notifications.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="notifications:Make">
+        <MSBuild Projects="src\Library\notifications.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="notification_dll_test">
+        <MSBuild Projects="test\notification_dll_test.dproj"/>
+    </Target>
+    <Target Name="notification_dll_test:Clean">
+        <MSBuild Projects="test\notification_dll_test.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="notification_dll_test:Make">
+        <MSBuild Projects="test\notification_dll_test.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Sample">
+        <MSBuild Projects="src\Sample\Sample.dproj"/>
+    </Target>
+    <Target Name="Sample:Clean">
+        <MSBuild Projects="src\Sample\Sample.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Sample:Make">
+        <MSBuild Projects="src\Sample\Sample.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="notifications;notification_dll_test;Sample"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="notifications:Clean;notification_dll_test:Clean;Sample:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="notifications:Make;notification_dll_test:Make;Sample:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

@@ -1,0 +1,81 @@
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <title>Adcionar novo tipo de notificação</title>
+    <style type="text/css"></style>
+</head>
+
+<body>
+    <h1 id="adicionar-novas-formas-de-envio-de-notificação-na-dll">Adicionar novas formas de envio de notificação na DLL
+    </h1>
+    <h3 id="passos-para-adicionar-uma-nova-forma-de-notificação-na-dll">Passos para adicionar uma nova forma de
+        notificação na DLL</h3>
+    <blockquote>
+        <p>Como exemplo vou utilizar uma notificação que irá utilizar o <strong>&#39;whatsapp&#39;</strong></p>
+    </blockquote>
+    <ul>
+        <li>Criar um novo arquivo para o envio das notificação pelo novo canal <strong>WhatsApp</strong> com o seguinte
+            nome: <strong>Model.Notification.Channel.WhatsApp.pas</strong>
+            <blockquote>
+                <p>Utilizar como referência qualquer um dos outros métodos de envio Ex.:
+                    <strong>TModelNotificationChannelEmail</strong></p>
+            </blockquote>
+            <ul>
+                <li>
+                    <p>A classe deve herdar de <strong>TModelNotificationChannelAbstract</strong></p>
+                    <pre><code class="language-Pascal">TModelNotificationChannelWhastApp = class(TModelNotificationChannelAbstract)
+    protected
+        procedure InternalSend; override;
+    public
+        constructor Create(AParent: IModelNotificationConfig); override;
+    end;
+    </code></pre>
+                </li>
+                <li>
+                    <p>Implementar o Create para inserir o nome do canal</p>
+                    <pre><code class="language-Pascal">constructor TModelNotificationChannelWhastApp.Create(
+    AParent: IModelNotificationConfig);
+    begin
+        inherited Create(AParent);
+    
+        FChannel  :=  &#39;Whastsapp&#39;;
+    end;
+    </code></pre>
+                </li>
+                <li>
+                    <p>Sobrescrever o método <strong>InternalSend</strong> na classe concreta para realizar a
+                        implentação do envio da nova notificação</p>
+                    <blockquote>
+                        <p>É recomendado criar um serviço para realizar esse processo e apenas chamados dentro deste
+                            método &#39;InternalSend&#39;</p>
+                    </blockquote>
+                    <pre><code class="language-Pascal">procedure TModelNotificationChannelWhastApp.InternalSend;
+    begin
+        // Função/Serviço que envia para o WhastApp
+        TServiceSendWhastAppFactory.New
+        .SendWhastApp
+            .CellPhone(FParent.Entity.UserCellphone)
+            .Message(FParent.Entity.Message)
+        .Send;
+    end;
+    </code></pre>
+                    <ul>
+                        <li>Ajustar o inicialization e finalization da classe para registrar o novo canal</li>
+                    </ul>
+                    <pre><code class="language-Pascal">initialization
+        _NotificationChannelManager.RegisterChannel(&#39;Whastsapp&#39;, TModelNotificationSendChannelWhatsApp);
+    
+    finalization
+        _NotificationChannelManager.UnRegisterChannel(&#39;Whastsapp&#39;);
+    </code></pre>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+
+</body>
+
+</html>

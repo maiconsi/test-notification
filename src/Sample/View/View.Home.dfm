@@ -1,0 +1,27 @@
+inherited FormHome: TFormHome
+  Tag = 1
+  Caption = 'Home'
+  ClientHeight = 473
+  ClientWidth = 779
+  Position = poOwnerFormCenter
+  OnShow = FormShow
+  ExplicitWidth = 795
+  ExplicitHeight = 512
+  TextHeight = 15
+  object WebBrowser1: TWebBrowser
+    Left = 0
+    Top = 0
+    Width = 779
+    Height = 473
+    Align = alClient
+    TabOrder = 0
+    ExplicitWidth = 824
+    ExplicitHeight = 532
+    ControlData = {
+      4C00000083500000E33000000000000000000000000000000000000000000000
+      000000004C000000000000000000000001000000E0D057007335CF11AE690800
+      2B2E126208000000000000004C0000000114020000000000C000000000000046
+      8000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000100000000000000000000000000000000000000}
+  end
+end
